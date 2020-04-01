@@ -1,4 +1,5 @@
 $(document).ready(function () {
+  var searchValue = $("#search-value").val();
   $("#search-button").on("click", function () {
     var searchValue = $("#search-value").val();
 
@@ -13,24 +14,24 @@ $(document).ready(function () {
     searchWeather($(this).text());
   });
 
-  // function makeRow(text) {
-  //   var li = $("<li>").addClass("list-group-item list-group-item-action").text(text);
-  //   $(".history").append(li);
-  // }
+  function makeRow(text) {
+    var li = $("<li>").addClass("list-group-item list-group-item-action").text(text);
+    $(".history").append(li);
+  }
 
   function searchWeather(searchValue) {
     $.ajax({
       type: "GET",
-      url: "http://api.openweathermap.org/data/2.5/weather?q=" + searchValue + "&appid=2aefe10b8806f4469247d8807ad2c892&units=imperial",
+      url: "https://api.openweathermap.org/data/2.5/weather?q=" + searchValue + "&appid=2aefe10b8806f4469247d8807ad2c892&units=imperial",
       dataType: "json",
       success: function (data) {
-        // create history link for this search
-        // if (history.indexOf(searchValue) === -1) {
-        //   history.push(searchValue);
-        //   window.localStorage.setItem("history", JSON.stringify(history));
+        //create history link for this search
+        if (history.indexOf(searchValue) === -1) {
+          history.push(searchValue);
+          window.localStorage.setItem("history", JSON.stringify(history));
 
-        //   makeRow(searchValue);
-        // }
+          makeRow(searchValue);
+        }
         console.log(data);
         // clear any old content
         $("#today").empty();
@@ -51,46 +52,50 @@ $(document).ready(function () {
         $("#today").append(card);
 
         // call follow-up api endpoints
-        getForecast(searchValue);
+        
       }
     });
   }
 
 
 
-//5 day forecast
- function forecast() {
-  $.ajax({
-      url: "http://api.openweathermap.org/data/2.5/forecast/daily?q="+searchValue"&cnt=5&appid=2aefe10b8806f4469247d8807ad2c892&units=imperial",
-      method: "GET",
+  //5 day forecast
+  function forecast(searchValue) {
+    $.ajax({
+      type: "GET",
+      url: "http://api.openweathermap.org/data/2.5/forecast?q=" + searchValue + "&appid=2aefe10b8806f4469247d8807ad2c892&units=imperial",
       dataType: "JSON",
-  }).then(function(response) {
-      var i = 0;
+      success: function (response) {
+        console.log(response);
 
-      for (trail in response.trails) {
-          i++;
-          createforecast(response, i);
+        $("#forecast").html("<h4 class = \"mt-3\">5-Day Forecast:</h4>").append("<div class=\"row\">");
+
+        //html content for forecast
+        for (var i = 0; i < response.list.length; i++) {
+          if (response.list[i].dt_txt.indexOf("15:00:00") !== -1) {
+            var card = $("<div class='card'>");
+            var cardBody = $("<div class='card-body'>");
+            var title = $("<h3>").addClass("card-title").text(response.name + " (" + new Date().toLocaleDateString() + ")"); 
+            var temp = $("<p class='card-text'>").text("Temperature: " + response.list[i].main.temp_max + "F");
+            var humidity = $("<p class='card-text'>").text("Humidity: " + response.list[i].main.humidity+ "%");
+            var wind = $("<p>").addClass("card-text").text("Wind Speed: " + response.list[i].wind.speed + " MPH");
+            var img = $("<img>").attr("src", "http://openweathermap.org/img/w/" + response.list[i].weather[0].icon + ".png").css('height: 50px', 'width: 50px');
+
+            // merge and add to page
+            cardBody.append(title, temp, humidity, wind);
+            card.append(img, cardBody);
+            $("#forecast").append(card);
+          }
+        }
+
       }
-  });
-};
-
-function createforecast(response, i) {
-  // create html content for current weather
-  var card = $("<div class='card'>");
-  var cardBody = $("<div class='card-body'>");
-  var title = $("<h3 class='card-title'>").text(response.trails[i].name);
-  // var summary = $("<p class='card-text'>").text(response.trails[i].summary);
-  var stars = $("<p class='card-text'>").text("Stars: " + response.trails[i].stars);
-  var trailLength = $("<p class='card-text'>").text("Trail Length: " + response.trails[i].length + " miles");
-  var condition = $("<p class='card-text'>").text("Trail condition: " + response.trails[i].conditionStatus);
-  var src = response.trails[i].imgMedium;
-  var img = $("<div class='card-img'>").css("background-image", "url('" + src + "')");
-
-  // merge and add to page
-  cardBody.append(title, trailLength, stars, condition);
-  card.append(img, cardBody);
-  $("#forecast").append(card);
-}
+    });
+  }
 
 
+
+  var history = JSON.parse(window.localStorage.getItem("history")) || [];
+  if (history.length > 0) {
+    searchWeather(history[history.length - 1]);
+  }
 });
