@@ -75,15 +75,17 @@ $(document).ready(function () {
           if (response.list[i].dt_txt.indexOf("15:00:00") !== -1) {
             var card = $("<div class='card'>");
             var cardBody = $("<div class='card-body'>");
-            var title = $("<h3>").addClass("card-title").text(response.name + " (" + new Date().toLocaleDateString() + ")"); 
+            var title = $("<h3>").addClass("card-title").text(response.city.name);
+            // var date = $("<h3>").addClass("card-title").text(response.list[i].);
             var temp = $("<p class='card-text'>").text("Temperature: " + response.list[i].main.temp_max + "F");
             var humidity = $("<p class='card-text'>").text("Humidity: " + response.list[i].main.humidity+ "%");
             var wind = $("<p>").addClass("card-text").text("Wind Speed: " + response.list[i].wind.speed + " MPH");
             var img = $("<img>").attr("src", "http://openweathermap.org/img/w/" + response.list[i].weather[0].icon + ".png").css('height: 50px', 'width: 50px');
 
             // merge and add to page
+            title.append(img);
             cardBody.append(title, temp, humidity, wind);
-            card.append(img, cardBody);
+            card.append(cardBody);
             $("#forecast").append(card);
           }
         }
